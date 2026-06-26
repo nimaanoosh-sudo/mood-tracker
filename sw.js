@@ -1,9 +1,9 @@
-var CACHE_NAME = 'mood-tracker-v2';
+var CACHE_NAME = 'mood-tracker-v3';
 var ASSETS = [
   './',
   './index.html',
   './css/style.css',
-  './js/app.js',
+  './js/app.js?v=2',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
