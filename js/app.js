@@ -322,6 +322,32 @@
     renderChart();
   }
 
+  // --- Easter Egg: Flowers ---
+  function triggerFlowers() {
+    var overlay = document.getElementById('flowerOverlay');
+    overlay.innerHTML = '';
+    overlay.classList.add('active');
+    document.body.classList.add('blurred');
+
+    var flowers = ['🌸','🌹','🌺','🌻','🌷','💐','🌼','🪷','🏵️','🪻'];
+    for (var i = 0; i < 60; i++) {
+      var span = document.createElement('span');
+      span.className = 'flower';
+      span.textContent = flowers[Math.floor(Math.random() * flowers.length)];
+      span.style.left = Math.random() * 100 + '%';
+      span.style.animationDelay = Math.random() * 2 + 's';
+      span.style.animationDuration = (2 + Math.random() * 3) + 's';
+      span.style.fontSize = (24 + Math.random() * 32) + 'px';
+      overlay.appendChild(span);
+    }
+
+    setTimeout(function () {
+      overlay.classList.remove('active');
+      document.body.classList.remove('blurred');
+      overlay.innerHTML = '';
+    }, 5000);
+  }
+
   // --- Init ---
   function init() {
     renderCurrentDate();
@@ -389,6 +415,13 @@
         });
         renderChart();
       });
+    });
+
+    document.getElementById('noteInput').addEventListener('input', function () {
+      if (this.value.toLowerCase().indexOf('sharareh') !== -1) {
+        triggerFlowers();
+        this.value = '';
+      }
     });
 
     window.addEventListener('resize', renderChart);
