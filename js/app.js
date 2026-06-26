@@ -18,6 +18,7 @@
 
   var selectedMood = null;
   var chartDate = new Date();
+  var chartType = 'bar';
 
   function loadData() {
     var raw = localStorage.getItem(STORAGE_KEY);
@@ -101,32 +102,18 @@
   }
 
   // --- Render: Chart ---
-  function renderChart() {
+  function setupCanvas() {
     var canvas = document.getElementById('moodChart');
     var ctx = canvas.getContext('2d');
-    var data = loadData();
-
-    var year = chartDate.getFullYear();
-    var month = chartDate.getMonth();
-    var daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    document.getElementById('chartMonth').textContent = MONTH_NAMES[month] + ' ' + year;
-
     var dpr = window.devicePixelRatio || 1;
     var rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * dpr;
     canvas.height = rect.height * dpr;
     ctx.scale(dpr, dpr);
+    return { canvas: canvas, ctx: ctx, w: rect.width, h: rect.height };
+  }
 
-    var w = rect.width;
-    var h = rect.height;
-    var pad = { top: 20, right: 16, bottom: 36, left: 32 };
-    var chartW = w - pad.left - pad.right;
-    var chartH = h - pad.top - pad.bottom;
-
-    ctx.clearRect(0, 0, w, h);
-
-    // Grid lines and Y labels
+  function drawGrid(ctx, w, h, pad, chartH) {
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (var i = 1; i <= 5; i++) {
@@ -142,8 +129,23 @@
       ctx.font = '11px sans-serif';
       ctx.fillText(String(i), pad.left - 8, y);
     }
+  }
 
-    // Bars
+  function drawXLabels(ctx, h, pad, daysInMonth, gap, barW, padLeft) {
+    for (var day = 1; day <= daysInMonth; day++) {
+      var showLabel = daysInMonth <= 15 || day % 2 === 1 || day === daysInMonth;
+      if (showLabel) {
+        var x = padLeft + (day - 1) * gap + gap / 2;
+        ctx.fillStyle = '#aaa';
+        ctx.font = '10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(String(day), x, h - pad.bottom + 8);
+      }
+    }
+  }
+
+  function drawBarChart(ctx, data, w, h, pad, chartW, chartH, year, month, daysInMonth) {
     var gap = chartW / daysInMonth;
     var barW = Math.min(gap * 0.65, 22);
 
@@ -171,16 +173,99 @@
         ctx.fillStyle = '#eee';
         ctx.fillRect(x, pad.top + chartH - 3, barW, 3);
       }
+    }
 
-      // X labels
-      var showLabel = daysInMonth <= 15 || day % 2 === 1 || day === daysInMonth;
-      if (showLabel) {
-        ctx.fillStyle = '#aaa';
-        ctx.font = '10px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillText(String(day), x + barW / 2, h - pad.bottom + 8);
+    drawXLabels(ctx, h, pad, daysInMonth, gap, barW, pad.left);
+  }
+
+  function drawLineChart(ctx, data, w, h, pad, chartW, chartH, year, month, daysInMonth) {
+    var gap = chartW / daysInMonth;
+    var points = [];
+
+    for (var day = 1; day <= daysInMonth; day++) {
+      var key = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      var entry = data[key];
+      var x = pad.left + (day - 1) * gap + gap / 2;
+
+      if (entry) {
+        var y = pad.top + chartH - (entry.mood / 5) * chartH;
+        points.push({ x: x, y: y, mood: entry.mood, color: MOODS.find(function (m) { return m.value === entry.mood; }).color });
       }
+    }
+
+    if (points.length === 0) {
+      drawXLabels(ctx, h, pad, daysInMonth, gap, 0, pad.left);
+      return;
+    }
+
+    // Draw filled area under the line
+    if (points.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, pad.top + chartH);
+      for (var i = 0; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.lineTo(points[points.length - 1].x, pad.top + chartH);
+      ctx.closePath();
+      var gradient = ctx.createLinearGradient(0, pad.top, 0, pad.top + chartH);
+      gradient.addColorStop(0, 'rgba(92, 107, 192, 0.25)');
+      gradient.addColorStop(1, 'rgba(92, 107, 192, 0.02)');
+      ctx.fillStyle = gradient;
+      ctx.fill();
+    }
+
+    // Draw line
+    if (points.length > 1) {
+      ctx.strokeStyle = '#5c6bc0';
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (var i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i].x, points[i].y);
+      }
+      ctx.stroke();
+    }
+
+    // Draw dots
+    for (var i = 0; i < points.length; i++) {
+      ctx.fillStyle = points[i].color;
+      ctx.beginPath();
+      ctx.arc(points[i].x, points[i].y, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(points[i].x, points[i].y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    drawXLabels(ctx, h, pad, daysInMonth, gap, 0, pad.left);
+  }
+
+  function renderChart() {
+    var info = setupCanvas();
+    var ctx = info.ctx;
+    var data = loadData();
+
+    var year = chartDate.getFullYear();
+    var month = chartDate.getMonth();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    document.getElementById('chartMonth').textContent = MONTH_NAMES[month] + ' ' + year;
+
+    var pad = { top: 20, right: 16, bottom: 36, left: 32 };
+    var chartW = info.w - pad.left - pad.right;
+    var chartH = info.h - pad.top - pad.bottom;
+
+    ctx.clearRect(0, 0, info.w, info.h);
+    drawGrid(ctx, info.w, info.h, pad, chartH);
+
+    if (chartType === 'line') {
+      drawLineChart(ctx, data, info.w, info.h, pad, chartW, chartH, year, month, daysInMonth);
+    } else {
+      drawBarChart(ctx, data, info.w, info.h, pad, chartW, chartH, year, month, daysInMonth);
     }
   }
 
@@ -223,6 +308,16 @@
     document.getElementById('nextMonth').addEventListener('click', function () {
       chartDate.setMonth(chartDate.getMonth() + 1);
       renderChart();
+    });
+
+    document.querySelectorAll('.chart-type-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        chartType = btn.dataset.chart;
+        document.querySelectorAll('.chart-type-btn').forEach(function (b) {
+          b.classList.toggle('active', b === btn);
+        });
+        renderChart();
+      });
     });
 
     window.addEventListener('resize', renderChart);
