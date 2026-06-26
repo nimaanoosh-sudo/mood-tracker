@@ -186,6 +186,17 @@ textarea {
   }
 }
 
+.history-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.history-info {
+  flex: 1;
+}
+
 .history-date {
   font-size: 13px;
   color: $color-text-light;
@@ -203,6 +214,36 @@ textarea {
   color: $color-text-light;
   margin-top: 4px;
   font-style: italic;
+}
+
+.history-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: $color-text-light;
+
+  &:hover {
+    border-color: $color-primary;
+    color: $color-primary;
+  }
+}
+
+.delete-btn:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
 }
 
 .empty {

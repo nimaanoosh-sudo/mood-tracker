@@ -19,6 +19,7 @@
   var selectedMood = null;
   var chartDate = new Date();
   var chartType = 'bar';
+  var editingDate = null;
 
   function loadData() {
     var raw = localStorage.getItem(STORAGE_KEY);
@@ -93,9 +94,17 @@
       var noteHtml = entry.note
         ? '<p class="history-note">' + escapeHtml(entry.note) + '</p>'
         : '';
-      return '<div class="history-entry">' +
-        '<span class="history-date">' + dateStr + '</span>' +
-        '<span class="history-mood">' + mood.emoji + ' ' + mood.label + '</span>' +
+      return '<div class="history-entry" data-date="' + key + '">' +
+        '<div class="history-top">' +
+          '<div class="history-info">' +
+            '<span class="history-date">' + dateStr + '</span>' +
+            '<span class="history-mood">' + mood.emoji + ' ' + mood.label + '</span>' +
+          '</div>' +
+          '<div class="history-actions">' +
+            '<button class="action-btn edit-btn" data-date="' + key + '" title="Edit">&#9998;</button>' +
+            '<button class="action-btn delete-btn" data-date="' + key + '" title="Delete">&#128465;</button>' +
+          '</div>' +
+        '</div>' +
         noteHtml +
         '</div>';
     }).join('');
@@ -269,6 +278,50 @@
     }
   }
 
+  // --- Edit & Delete ---
+  function startEdit(date) {
+    var data = loadData();
+    var entry = data[date];
+    if (!entry) return;
+
+    editingDate = date;
+    selectedMood = entry.mood;
+    document.getElementById('noteInput').value = entry.note || '';
+    highlightMood(entry.mood);
+    document.getElementById('saveBtn').disabled = false;
+    document.getElementById('saveBtn').textContent = 'Update';
+
+    var d = new Date(date + 'T00:00:00');
+    var dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    document.querySelector('.today-section h2').textContent = 'Editing: ' + dateStr;
+
+    document.querySelector('.today-section').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    editingDate = null;
+    selectedMood = null;
+    document.getElementById('noteInput').value = '';
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('saveBtn').textContent = 'Save';
+    document.querySelector('.today-section h2').textContent = 'How are you feeling today?';
+    highlightMood(null);
+  }
+
+  function deleteEntry(date) {
+    var d = new Date(date + 'T00:00:00');
+    var dateStr = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    if (!confirm('Delete mood entry for ' + dateStr + '?')) return;
+
+    var data = loadData();
+    delete data[date];
+    saveData(data);
+
+    if (editingDate === date) resetForm();
+    renderHistory();
+    renderChart();
+  }
+
   // --- Init ---
   function init() {
     renderCurrentDate();
@@ -287,17 +340,35 @@
     document.getElementById('saveBtn').addEventListener('click', function () {
       if (!selectedMood) return;
       var data = loadData();
-      data[todayKey()] = {
+      var date = editingDate || todayKey();
+      data[date] = {
         mood: selectedMood,
         note: document.getElementById('noteInput').value.trim()
       };
       saveData(data);
+      editingDate = null;
+      resetForm();
       renderHistory();
       renderChart();
 
       var btn = document.getElementById('saveBtn');
       btn.textContent = 'Saved!';
       setTimeout(function () { btn.textContent = 'Save'; }, 1500);
+    });
+
+    document.getElementById('historyList').addEventListener('click', function (e) {
+      var editBtn = e.target.closest('.edit-btn');
+      var deleteBtn = e.target.closest('.delete-btn');
+
+      if (editBtn) {
+        var date = editBtn.dataset.date;
+        startEdit(date);
+      }
+
+      if (deleteBtn) {
+        var date = deleteBtn.dataset.date;
+        deleteEntry(date);
+      }
     });
 
     document.getElementById('prevMonth').addEventListener('click', function () {
