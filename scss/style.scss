@@ -244,6 +244,13 @@ canvas {
   height: 200px;
 }
 
+.footer {
+  text-align: center;
+  padding: 16px;
+  color: $color-text-light;
+  font-size: 13px;
+}
+
 @media (max-width: 480px) {
   .mood-buttons {
     gap: 8px;
