@@ -1,0 +1,263 @@
+$color-bg: #f5f7fa;
+$color-card: #ffffff;
+$color-text: #333;
+$color-text-light: #888;
+$color-primary: #5c6bc0;
+$color-primary-hover: #3f51b5;
+
+$mood-1: #e74c3c;
+$mood-2: #e67e22;
+$mood-3: #f1c40f;
+$mood-4: #2ecc71;
+$mood-5: #27ae60;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: $color-bg;
+  color: $color-text;
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 24px;
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: $color-primary;
+  }
+
+  .current-date {
+    color: $color-text-light;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+}
+
+.card {
+  background: $color-card;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    font-weight: 600;
+  }
+}
+
+.mood-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.mood-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  .emoji {
+    font-size: 28px;
+    line-height: 1;
+  }
+
+  .label {
+    font-size: 11px;
+    color: $color-text-light;
+    font-weight: 500;
+  }
+
+  &:hover {
+    border-color: $color-primary;
+    transform: translateY(-2px);
+  }
+
+  &.selected {
+    border-color: $color-primary;
+    background: rgba($color-primary, 0.08);
+
+    .label {
+      color: $color-primary;
+      font-weight: 600;
+    }
+  }
+
+  &.selected[data-mood="1"] {
+    border-color: $mood-1;
+    background: rgba($mood-1, 0.08);
+    .label { color: $mood-1; }
+  }
+  &.selected[data-mood="2"] {
+    border-color: $mood-2;
+    background: rgba($mood-2, 0.08);
+    .label { color: $mood-2; }
+  }
+  &.selected[data-mood="3"] {
+    border-color: $mood-3;
+    background: rgba($mood-3, 0.08);
+    .label { color: $mood-3; }
+  }
+  &.selected[data-mood="4"] {
+    border-color: $mood-4;
+    background: rgba($mood-4, 0.08);
+    .label { color: $mood-4; }
+  }
+  &.selected[data-mood="5"] {
+    border-color: $mood-5;
+    background: rgba($mood-5, 0.08);
+    .label { color: $mood-5; }
+  }
+}
+
+textarea {
+  width: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 12px;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.1);
+  }
+}
+
+.save-btn {
+  width: 100%;
+  padding: 12px;
+  background: $color-primary;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-hover;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.history-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-entry {
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.history-date {
+  font-size: 13px;
+  color: $color-text-light;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.history-mood {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.history-note {
+  font-size: 13px;
+  color: $color-text-light;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.empty {
+  text-align: center;
+  color: $color-text-light;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h2 {
+    margin-bottom: 0;
+    font-size: 16px;
+  }
+}
+
+.nav-btn {
+  background: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 18px;
+  color: $color-text;
+  line-height: 1;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+}
+
+canvas {
+  width: 100%;
+  height: 200px;
+}
+
+@media (max-width: 480px) {
+  .mood-buttons {
+    gap: 8px;
+  }
+
+  .mood-btn {
+    padding: 10px;
+
+    .emoji {
+      font-size: 24px;
+    }
+
+    .label {
+      font-size: 10px;
+    }
+  }
+}
