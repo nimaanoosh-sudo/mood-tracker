@@ -1,4 +1,4 @@
-var CACHE_NAME = 'mood-tracker-v1';
+var CACHE_NAME = 'mood-tracker-v2';
 var ASSETS = [
   './',
   './index.html',
@@ -35,8 +35,16 @@ self.addEventListener('activate', function (event) {
 
 self.addEventListener('fetch', function (event) {
   event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      return cached || fetch(event.request);
-    })
+    fetch(event.request)
+      .then(function (response) {
+        var clone = response.clone();
+        caches.open(CACHE_NAME).then(function (cache) {
+          cache.put(event.request, clone);
+        });
+        return response;
+      })
+      .catch(function () {
+        return caches.match(event.request);
+      })
   );
 });
